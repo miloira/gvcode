@@ -6,7 +6,7 @@ with open("README.md","r",encoding="utf-8") as f:
 
 setup(
     name="gvcode",
-    version="0.0.1",
+    version="0.0.2",
     description="A useful verification code generation tool.",
     long_description=desc,
     long_description_content_type="text/markdown",
