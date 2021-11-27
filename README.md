@@ -13,7 +13,7 @@ if __name__ == '__main__':
     # vc.generate_digit()
     # 字母验证码
     # vc.generate_alpha()
-    # 数字字符混合验证码
+    # 数字字母混合验证码
     vc.generate_mix()
 
     # 图片字节码

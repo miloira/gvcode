@@ -128,21 +128,21 @@ class VerificationCode:
             # ImageFilter.GaussianBlur
             self._img = self._img.filter(ImageFilter.GaussianBlur(radius=1))
 
-    def generate_digit(self):
-        self.code = ''.join(str(random.randrange(10000, 100000)))
+    def generate_digit(self, length=5):
+        self.code = ''.join(str(random.randrange(10 ** (length - 1) , 10 ** length)))
         self.generate(self.code)
 
-    def generate_alpha(self):
+    def generate_alpha(self, length=5):
         code_list = []
-        for i in range(5):
+        for i in range(length):
             code_list.append(choice(string.ascii_letters))
 
         self.code = ''.join(code_list)
         self.generate(self.code)
 
-    def generate_mix(self):
+    def generate_mix(self, length=5):
         code_list = []
-        for i in range(5):
+        for i in range(length):
             code_list.append(choice(string.digits + string.ascii_letters))
 
         self.code = ''.join(code_list)
@@ -174,7 +174,7 @@ if __name__ == '__main__':
     # vc.generate_digit()
     # 字母验证码
     # vc.generate_alpha()
-    # 数字字符混合验证码
+    # 数字字母混合验证码
     vc.generate_mix()
 
     # 图片字节码
