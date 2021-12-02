@@ -2,4 +2,4 @@
 # Author: zhangmingming
 # Email: 690126048@qq.com
 
-from .gvcode import VerificationCode
+from .gvcode import VFCode

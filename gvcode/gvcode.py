@@ -4,16 +4,16 @@ import string
 from io import BytesIO
 from random import randint, choice
 from PIL import ImageFont, ImageFilter, Image, ImageColor, ImageDraw
+from typing import Tuple, Any, Union
 
 
-
-class VerificationCode:
+class VFCode:
 
     def __init__(
             self,
             width=200,
             height=80,
-            fontsize=45,
+            fontsize=50,
             font_color_values=None,
             font_background_value=None,
             draw_dots=False,
@@ -21,7 +21,7 @@ class VerificationCode:
             draw_lines=True,
             lines_width=3,
             mask=False,
-            font_type='arial.ttf'
+            font='arial.ttf'
     ):
         """
         初始化参数
@@ -35,19 +35,22 @@ class VerificationCode:
         :param draw_lines: 是否画干扰线
         :param lines_width: 干扰线宽度
         :param mask: 是否使用磨砂效果
-        :param font_type: 字体 (linux系统添加字体文件 /usr/share/fonts/arial.ttf)
+        :param font: 字体 (linux系统添加字体文件 /usr/share/fonts/arial.ttf)
         """
         self.code = None
         self._img = None
         self.width = width
         self.height = height
         self.fontsize = fontsize
-        self.font = ImageFont.truetype(font_type, fontsize)
+        self.font = ImageFont.truetype(font, fontsize)
         self.draw_dots = draw_dots
         self.dots_width = dots_width
         self.draw_lines = draw_lines
         self.lines_width = lines_width
         self.mask = mask
+
+        self.symbol = None
+        self.result = None
 
         if font_color_values:
             self.font_colors = [ImageColor.getcolor(value, 'RGBA') for value in font_color_values]
@@ -72,10 +75,10 @@ class VerificationCode:
         if self.font_background in self.font_colors:
             self.font_colors.remove(self.font_background)
 
-    def random_color(self):
+    def random_color(self) -> Tuple:
         return choice(self.font_colors)
 
-    def img_blur(self, img: Image):
+    def img_blur(self, img: Image) -> None:
         width, height = img.size
         draw = ImageDraw.Draw(img)
 
@@ -94,14 +97,21 @@ class VerificationCode:
                 y = randint(0, height)
                 draw.arc((x, y, x + 4, y + 4), 0, 90, fill=self.random_color(), width=self.dots_width)
 
-    def _gen_txt_img(self, text: str, fontsize: int, font):
-        img = Image.new('RGBA', (fontsize, fontsize))
+    def _gen_txt_img(self, text: str) -> Image.Image:
+        img = Image.new('RGBA', (self.fontsize + 5, self.fontsize + 5))
         text_draw = ImageDraw.Draw(img)
-        text_draw.text((0, 0), text, fill=self.random_color(), font=font)
-        img = img.rotate(angle=randint(-30, 90), expand=False)
+        text_draw.text((0, 0), text, fill=self.random_color(), font=self.font)
+
+        if self.symbol and self.result:
+            if text == self.symbol:
+                return img
+            img = img.rotate(angle=randint(-30, 30), expand=False)
+        else:
+            img = img.rotate(angle=randint(-30, 90), expand=False)
         return img
 
-    def generate(self, code):
+    def generate(self, code) -> None:
+        self.code = code
         self._img = Image.new(
             'RGBA',
             (self.width, self.height),
@@ -109,10 +119,14 @@ class VerificationCode:
         )
         # blur image
         self.img_blur(self._img)
-        base = int(self.width / len(code))
-
-        for pos, c in enumerate(code):
-            txt_img = self._gen_txt_img(c, self.fontsize, self.font)
+        if self.symbol and self.result:
+            deal_code = code.split(self.symbol)
+            deal_code.insert(1, self.symbol)
+        else:
+            deal_code = code
+        base = int(self.width / len(deal_code))
+        for pos, c in enumerate(deal_code):
+            txt_img = self._gen_txt_img(c)
             roffset = randint(-10, 10)
 
             # set the position and paste the code image
@@ -128,37 +142,49 @@ class VerificationCode:
             # ImageFilter.GaussianBlur
             self._img = self._img.filter(ImageFilter.GaussianBlur(radius=1))
 
-    def generate_digit(self, length=5):
-        self.code = ''.join(str(random.randrange(10 ** (length - 1) , 10 ** length)))
-        self.generate(self.code)
+    def generate_digit(self, length:int = 5) -> None:
+        self.generate(''.join(str(random.randrange(10 ** (length - 1) , 10 ** length))))
 
-    def generate_alpha(self, length=5):
+    def generate_alpha(self, length:int = 5) -> None:
         code_list = []
         for i in range(length):
             code_list.append(choice(string.ascii_letters))
 
-        self.code = ''.join(code_list)
-        self.generate(self.code)
+        self.generate(''.join(code_list))
 
-    def generate_mix(self, length=5):
+    def generate_mix(self, length:int = 5) -> None:
         code_list = []
         for i in range(length):
             code_list.append(choice(string.digits + string.ascii_letters))
 
-        self.code = ''.join(code_list)
-        self.generate(self.code)
+        self.generate(''.join(code_list))
 
-    def get_img_bytes(self, fm='png'):
+    def generate_op(self, symbol: str = '+') -> None:
+        self.symbol = symbol
+        left_digit = random.randrange(1,100)
+        right_digit = random.randrange(1,100)
+        if symbol == '+':
+            self.result = left_digit + right_digit
+        elif symbol == '-':
+            self.result = left_digit - right_digit
+        else:
+            raise ValueError('仅支持 +-')
+        self.generate('%s%s%s'%(left_digit, symbol, right_digit))
+
+    def get_img_bytes(self, fm='png') -> bytes:
         binary_stream = BytesIO()
         self._img.save(binary_stream, fm)
         return binary_stream.getvalue()
 
-    def get_img_base64(self, fm='png'):
+    def get_img_base64(self, fm='png') -> Tuple[Any, Union[str, Any]]:
         b64_img_prefix = 'data:image/png;base64,'
         base64_img = b64_img_prefix + base64.b64encode(self.get_img_bytes(fm)).decode()
-        return self.code, base64_img
+        if self.symbol and self.result:
+            return str(self.result), base64_img
+        else:
+            return self.code, base64_img
 
-    def save(self, filename: str = None, fm='png'):
+    def save(self, filename: str = None, fm='png') -> None:
         if filename is None:
             self._img.save(self.code + '.' + fm, fm)
         else:
@@ -166,20 +192,33 @@ class VerificationCode:
 
 
 if __name__ == '__main__':
-    vc = VerificationCode()
+    vc = VFCode()
     # 验证码类型
     # 自定义验证码
     # vc.generate('abcd')
-    # 数字验证码
+
+    # 数字验证码（默认5位）
     # vc.generate_digit()
-    # 字母验证码
+    # vc.generate_digit(4)
+
+    # 字母验证码（默认5位）
     # vc.generate_alpha()
-    # 数字字母混合验证码
-    vc.generate_mix()
+    # vc.generate_alpha(5)
+
+    # 数字字母混合验证码（默认5位）
+    # vc.generate_mix()
+    # vc.generate_mix(6)
+
+    # 数字加减验证码（默认加法）
+    vc.generate_op()
+    # 数字加减验证码（加法）
+    # vc.generate_op('+')
+    # 数字加减验证码（减法）
+    # vc.generate_op('-')
 
     # 图片字节码
     # print(vc.get_img_bytes())
     # 图片base64编码
-    # print(vc.get_img_base64())
+    print(vc.get_img_base64())
     # 保存图片
     vc.save()
