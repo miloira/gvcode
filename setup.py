@@ -16,14 +16,14 @@ if system == 'Linux':
 
 setup(
     name="gvcode",
-    version="0.0.3",
+    version="0.0.4",
     description="A useful verification code generation tool.",
     long_description=desc,
     long_description_content_type="text/markdown",
     license="GNU",
     author="Msky",
     author_email="690126048@qq.com",
-    url="https://github.com/zhangmingming-chb/verificationcode",
+    url="https://github.com/miloira/gvcode",
     packages=find_packages(),
     install_requires=["pillow"]
 )
