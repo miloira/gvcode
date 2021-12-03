@@ -167,16 +167,22 @@ class VFCode:
 
         self.generate(''.join(code_list))
 
-    def generate_op(self, symbol: str = '+') -> None:
+    def generate_op(self, symbol: str = 'x') -> None:
         self.symbol = symbol
-        left_digit = random.randrange(1, 100)
-        right_digit = random.randrange(1, 100)
+        left_digit = random.randrange(10, 100)
+        right_digit = random.randrange(10, 100)
+        while left_digit <= right_digit:
+            right_digit //= 2
         if symbol == '+':
             self.result = left_digit + right_digit
         elif symbol == '-':
             self.result = left_digit - right_digit
+        elif symbol == 'x':
+            left_digit = random.randrange(1, 10)
+            right_digit = random.randrange(1, 10)
+            self.result = left_digit * right_digit
         else:
-            raise ValueError('仅支持 +-')
+            raise ValueError('仅支持 +-x')
         self.generate('%s%s%s' % (left_digit, symbol, right_digit))
 
     def get_img_bytes(self, fm='png') -> bytes:
