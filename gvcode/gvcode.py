@@ -2,32 +2,33 @@ import base64
 import random
 import string
 from io import BytesIO
+from pathlib import Path
 from random import randint, choice
 from PIL import ImageFont, ImageFilter, Image, ImageColor, ImageDraw
-from typing import Tuple, Any, Union
+from typing import List, Tuple, Any, Union, Optional
 
 
 class VFCode:
 
     def __init__(
             self,
-            width=200,
-            height=80,
-            fontsize=50,
-            font_color_values=None,
-            font_background_value=None,
-            draw_dots=False,
-            dots_width=1,
-            draw_lines=True,
-            lines_width=3,
-            mask=False,
-            font='arial.ttf'
+            width: int = 200,
+            height: int = 80,
+            fontsize: int = 50,
+            font_color_values: Optional[List[str]] = None,
+            font_background_value: Optional[str] = None,
+            draw_dots: bool = False,
+            dots_width: int = 1,
+            draw_lines: bool = True,
+            lines_width: int = 3,
+            mask: bool = False,
+            font: Optional[str] = None
     ):
         """
         初始化参数
         :param width: 图片宽度
         :param height: 图片高度
-        :param fontsize: 图片尺寸
+        :param fontsize: 字体尺寸
         :param font_color_values: 字体颜色值
         :param font_background_value: 背景颜色值
         :param draw_dots: 是否画干扰点
@@ -35,14 +36,21 @@ class VFCode:
         :param draw_lines: 是否画干扰线
         :param lines_width: 干扰线宽度
         :param mask: 是否使用磨砂效果
-        :param font: 字体 (linux系统添加字体文件 /usr/share/fonts/arial.ttf)
+        :param font: 字体 内置可选字体 arial.ttf calibri.ttf simsun.ttc
         """
         self.code = None
         self._img = None
         self.width = width
         self.height = height
         self.fontsize = fontsize
-        self.font = ImageFont.truetype(font, fontsize)
+        # linux添加字体文件 /usr/share/fonts/arial.ttf
+        if font is None:
+            self.font = ImageFont.truetype(str(Path(__file__).resolve().parent / 'fonts/arial.ttf'), fontsize)
+        else:
+            try:
+                self.font = ImageFont.truetype(str(Path(__file__).resolve().parent / 'fonts/%s' % font), fontsize)
+            except:
+                self.font = ImageFont.truetype(font, fontsize)
         self.draw_dots = draw_dots
         self.dots_width = dots_width
         self.draw_lines = draw_lines
@@ -142,17 +150,17 @@ class VFCode:
             # ImageFilter.GaussianBlur
             self._img = self._img.filter(ImageFilter.GaussianBlur(radius=1))
 
-    def generate_digit(self, length:int = 5) -> None:
-        self.generate(''.join(str(random.randrange(10 ** (length - 1) , 10 ** length))))
+    def generate_digit(self, length: int = 5) -> None:
+        self.generate(''.join(str(random.randrange(10 ** (length - 1), 10 ** length))))
 
-    def generate_alpha(self, length:int = 5) -> None:
+    def generate_alpha(self, length: int = 5) -> None:
         code_list = []
         for i in range(length):
             code_list.append(choice(string.ascii_letters))
 
         self.generate(''.join(code_list))
 
-    def generate_mix(self, length:int = 5) -> None:
+    def generate_mix(self, length: int = 5) -> None:
         code_list = []
         for i in range(length):
             code_list.append(choice(string.digits + string.ascii_letters))
@@ -161,15 +169,15 @@ class VFCode:
 
     def generate_op(self, symbol: str = '+') -> None:
         self.symbol = symbol
-        left_digit = random.randrange(1,100)
-        right_digit = random.randrange(1,100)
+        left_digit = random.randrange(1, 100)
+        right_digit = random.randrange(1, 100)
         if symbol == '+':
             self.result = left_digit + right_digit
         elif symbol == '-':
             self.result = left_digit - right_digit
         else:
             raise ValueError('仅支持 +-')
-        self.generate('%s%s%s'%(left_digit, symbol, right_digit))
+        self.generate('%s%s%s' % (left_digit, symbol, right_digit))
 
     def get_img_bytes(self, fm='png') -> bytes:
         binary_stream = BytesIO()
@@ -192,7 +200,27 @@ class VFCode:
 
 
 if __name__ == '__main__':
-    vc = VFCode()
+    vc = VFCode(
+        width=200,                       # 图片宽度
+        height=80,                       # 图片高度
+        fontsize=50,                     # 字体尺寸
+        font_color_values=[
+            '#ffffff',
+            '#000000',
+            '#3e3e3e',
+            '#ff1107',
+            '#1bff46',
+            '#ffbf13',
+            '#235aff'
+        ],                                # 字体颜色值
+        font_background_value='#ffffff',  # 背景颜色值
+        draw_dots=False,                  # 是否画干扰点
+        dots_width=1,                     # 干扰点宽度
+        draw_lines=True,                  # 是否画干扰线
+        lines_width=3,                    # 干扰线宽度
+        mask=False,                       # 是否使用磨砂效果
+        font='arial.ttf'                  # 字体 内置可选字体 arial.ttf calibri.ttf simsun.ttc
+    )
     # 验证码类型
     # 自定义验证码
     # vc.generate('abcd')

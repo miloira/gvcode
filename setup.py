@@ -7,7 +7,7 @@ with open("README.md","r",encoding="utf-8") as f:
 
 setup(
     name="gvcode",
-    version="0.0.5",
+    version="0.0.8",
     description="A useful verification code generation tool.",
     long_description=desc,
     long_description_content_type="text/markdown",
@@ -16,5 +16,6 @@ setup(
     author_email="690126048@qq.com",
     url="https://github.com/miloira/gvcode",
     packages=find_packages(),
-    install_requires=["pillow"]
+    install_requires=["pillow"],
+    include_package_data=True
 )
