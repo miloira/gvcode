@@ -43,12 +43,12 @@ class VFCode:
         self.width = width
         self.height = height
         self.fontsize = fontsize
-        # linux添加字体文件 /usr/share/fonts/arial.ttf
+        # linux add fonts file /usr/share/fonts/arial.ttf
         if font is None:
-            self.font = ImageFont.truetype(str(Path(__file__).resolve().parent / 'fonts/arial.ttf'), fontsize)
+            self.font = ImageFont.truetype(str(Path(__file__).resolve().parent) + '/fonts/arial.ttf', fontsize)
         else:
             try:
-                self.font = ImageFont.truetype(str(Path(__file__).resolve().parent / 'fonts/%s' % font), fontsize)
+                self.font = ImageFont.truetype(str(Path(__file__).resolve().parent) + '/fonts/%s' % font, fontsize)
             except:
                 self.font = ImageFont.truetype(font, fontsize)
         self.draw_dots = draw_dots
@@ -182,7 +182,7 @@ class VFCode:
             right_digit = random.randrange(1, 10)
             self.result = left_digit * right_digit
         else:
-            raise ValueError('仅支持 +-x')
+            raise ValueError('only suppo +-x')
         self.generate('%s%s%s' % (left_digit, symbol, right_digit))
 
     def get_img_bytes(self, fm='png') -> bytes:
